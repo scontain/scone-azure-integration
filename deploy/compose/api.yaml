@@ -1,0 +1,13 @@
+version: "3.3"
+services:
+  api:
+    image: $API_IMAGE
+    environment:
+      - DEBUG_OPEN_CERT=1
+      - SCONE_CAS_ADDR=172.17.0.1
+      - SCONE_LAS_ADDR=172.17.0.1
+      - SCONE_CONFIG_ID=$PYTHON_SESSION_NAME/rest-api
+    ports:
+      - "4996:4996"
+    devices:
+      - "$SGXDEVICE"

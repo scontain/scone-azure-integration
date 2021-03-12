@@ -1,0 +1,43 @@
+name: $PYTHON_SESSION_NAME
+version: "0.3"
+
+security:
+  attestation:
+    mode: maa
+    url: $MAA_PROVIDER
+    tolerate: [debug-mode, maa-managed-tcb]
+
+secrets:
+  - name: AAD_TOKEN
+    kind: aad-token
+    tenant_id: $AZURE_TENANT_ID
+    client_id: $AZURE_CLIENT_ID
+    # NOTE: One could also use `private_key` instead of `application_secret`:
+    application_secret: $AZURE_APPLICATION_SECRET
+  - name: MY_AKV_SECRET
+    kind: ascii
+    import_akv:
+      vault: $AKV_VAULT
+      secret_name: $AKV_SECRET_NAME
+  - name: MY_AKV_CERT
+    kind: x509
+    import_akv:
+      vault: $AKV_VAULT
+      secret_name: $AKV_CERT_SECRET_NAME
+
+services:
+  - name: rest-api
+    image_name: rest-api
+    command: python3 /app/rest_api.py
+    mrenclaves: ["291645fc02749ef4f895da626d1ffe9bf45d34aad2177507844e1b87d220219f"]
+    environment:
+      AKV_SECRET: $$SCONE::MY_AKV_SECRET$$
+    pwd: /
+
+images:
+  - name: rest-api
+    injection_files:
+      - path: /tls/flask.crt
+        content: $$SCONE::MY_AKV_CERT.crt$$
+      - path: /tls/flask.key
+        content: $$SCONE::MY_AKV_CERT.key$$

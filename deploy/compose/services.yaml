@@ -1,0 +1,17 @@
+version: "3.3"
+services:
+  cas:
+    image: $CAS_IMAGE
+    ports:
+      - "8081:8081"
+      - "18765:18765"
+    devices:
+      - "$SGXDEVICE"
+  las:
+    image: $LAS_IMAGE
+    ports:
+      - "18766:18766"
+    volumes:
+      - /var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket
+    devices:
+      - "$SGXDEVICE"
