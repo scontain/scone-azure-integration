@@ -1,0 +1,49 @@
+# Default values for cas.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image: "registry.scontain.com:5050/sconecuratedimages/services:cas.preprovisioned"
+imagePullPolicy: Always
+
+imagePullSecrets: 
+  - name: sconeapps
+
+# Major version of the SCONE runtime. Set if using older runtimes.
+# E.g., for SCONE 4.2.1, set `sconeVersion` to `4`.
+sconeVersion: 5
+
+securityContext: {}
+
+service:
+  type: NodePort
+  clientPort: 8081
+  enclavePort: 18765
+
+env:
+  # Use the host IP to reach the appropriate LAS.
+  # This requires LAS to be deployed with `service.hostPort=true`.
+  - name: SCONE_LAS_ADDR
+    valueFrom:
+      fieldRef:
+        fieldPath: status.hostIP
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+extraVolumes: []
+#  - name: dev-isgx
+#    hostPath:
+#      path: /dev/isgx
+
+extraVolumeMounts: []
+#  - name: dev-isgx
+#    path: /dev/isgx
+
+useSGXDevPlugin: "scone"

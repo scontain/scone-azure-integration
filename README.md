@@ -2,8 +2,8 @@
 
 - [x] Add source code of the REST API.
 - [ ] Script for creating session + testing.
-- [ ] Create Helm charts for demo.
-- [ ] Squash images.
+- [x] Create Helm charts for demo.
+- [x] Squash images.
 - [ ] Finish demo step-by-step.
 - [ ] Record screencast.
 

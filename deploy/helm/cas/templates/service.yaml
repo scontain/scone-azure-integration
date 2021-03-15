@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cas.fullname" . }}
+  labels:
+    {{- include "cas.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.clientPort }}
+      targetPort: client
+      protocol: TCP
+      name: client
+    - port: {{ .Values.service.enclavePort }}
+      targetPort: enclave
+      protocol: TCP
+      name: enclave
+  selector:
+    {{- include "cas.selectorLabels" . | nindent 4 }}
