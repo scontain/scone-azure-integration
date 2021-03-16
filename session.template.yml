@@ -13,7 +13,7 @@ secrets:
     tenant_id: $AZURE_TENANT_ID
     client_id: $AZURE_CLIENT_ID
     # NOTE: One could also use `private_key` instead of `application_secret`:
-    application_secret: $AZURE_APPLICATION_SECRET
+    application_secret: $AZURE_CLIENT_SECRET
   - name: MY_AKV_SECRET
     kind: ascii
     import_akv:

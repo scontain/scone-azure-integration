@@ -1,0 +1,22 @@
+# Export the appropriate image names.
+export CAS_IMAGE=registry.scontain.com:5050/clenimar/azure-integration-demo:cas.preprovisioned-scone5.2.1
+export LAS_IMAGE=registry.scontain.com:5050/clenimar/azure-integration-demo:las-scone5.2.1
+export API_IMAGE=registry.scontain.com:5050/clenimar/azure-integration-demo:restapiv1-scone5.2.1
+export CLI_IMAGE=registry.scontain.com:5050/clenimar/azure-integration-demo:sconecli-scone5.2.1
+
+# Export the appropriate SGX device.
+# Note: This is only used if you're running with docker-compose.
+function determine_sgx_device {
+    export SGXDEVICE="/dev/sgx"
+    export MOUNT_SGXDEVICE="-v /dev/sgx/:/dev/sgx"
+    if [[ ! -e "$SGXDEVICE" ]] ; then
+        export SGXDEVICE="/dev/isgx"
+        export MOUNT_SGXDEVICE="--device=/dev/isgx"
+        if [[ ! -c "$SGXDEVICE" ]] ; then
+            echo "Warning: No SGX device found! Will run in SIM mode." > /dev/stderr
+            export MOUNT_SGXDEVICE=""
+            export SGXDEVICE=""
+        fi
+    fi
+}
+determine_sgx_device

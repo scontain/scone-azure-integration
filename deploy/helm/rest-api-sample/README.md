@@ -1,4 +1,0 @@
-REST API Sample
-===
-
-TODO.

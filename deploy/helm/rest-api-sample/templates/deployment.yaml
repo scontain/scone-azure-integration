@@ -48,10 +48,16 @@ spec:
             protocol: TCP
             containerPort: 4996
           env:
+          {{- if .Values.scone.cas }}
           - name: SCONE_CAS_ADDR
             value: {{ .Values.scone.cas }}
+          - name: SCONE_LAS_ADDR
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
           - name: SCONE_CONFIG_ID
             value: {{ .Values.scone.configId }}
+          {{- end }}
           {{- if .Values.env }}
           {{- toYaml .Values.env | nindent 10 }}
           {{- end }}

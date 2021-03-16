@@ -9,8 +9,8 @@ imagePullSecrets:
 
 # Configure attestation.
 scone:
-  cas: 5-2-0.scone-cas.cf
-  configId: azure-integration-demo/rest-api
+  cas: ""
+  configId: ""
 
 # Configure Service.
 service:
@@ -18,13 +18,7 @@ service:
   port: 4996
   type: NodePort
 
-env:
-  # Use the host IP to reach the appropriate LAS.
-  # This requires LAS to be deployed with `service.hostPort=true`.
-  - name: SCONE_LAS_ADDR
-    valueFrom:
-      fieldRef:
-        fieldPath: status.hostIP
+env: []
 
 resources: {}
 

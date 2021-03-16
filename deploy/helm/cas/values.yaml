@@ -17,7 +17,7 @@ sconeVersion: 5
 securityContext: {}
 
 service:
-  type: NodePort
+  type: ClusterIP
   clientPort: 8081
   enclavePort: 18765
 
@@ -47,3 +47,6 @@ extraVolumeMounts: []
 #    path: /dev/isgx
 
 useSGXDevPlugin: "scone"
+# Amount of EPC memory to request to Azure, in MiB.
+# Used only when `useSGXDevPlugin=azure`.
+sgxEpcMem: "4"

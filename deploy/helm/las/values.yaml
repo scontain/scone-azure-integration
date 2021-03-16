@@ -39,3 +39,6 @@ extraVolumeMounts: []
 #    path: /dev/isgx
 
 useSGXDevPlugin: "scone"
+# Amount of EPC memory to request to Azure, in MiB.
+# Used only when `useSGXDevPlugin=azure`.
+sgxEpcMem: "4"

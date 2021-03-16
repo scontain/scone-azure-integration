@@ -1,6 +1,6 @@
 # CAS
 
-> :warning: This is not a production-ready Helm chart and it should be used only for testing or demo purposes. Some parameters and features listed below are not available in this version of the chart. A production-ready CAS chart is available in SconeAppsEE Helm repository.
+> :warning: This is not a production-ready Helm chart and it should be used only for testing or demo purposes. Some parameters and features listed below are not available in this version of the chart. A production-ready CAS chart is available at SconeAppsEE Helm repository.
 
 Deploy the SCONE Configuration and Attestation Service (CAS) to your Kubernetes cluster.
 
