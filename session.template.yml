@@ -3,22 +3,52 @@ version: "0.3"
 
 security:
   attestation:
+    # Use Microsoft Azure Attestation as the attestation provider.
+    # Since MAA also supports attestation policies, the attestation flow has to be
+    # allowed by BOTH policies (i.e., MAA and SCONE). If you use one of the shared
+    # MAA instances provided by Azure, they apply an "empty" policy, so you only have
+    # to comply with this one.
+    # NOTE: In some Azure regions, MAA providers use short RSA signing keys (1024 bits).
+    # Such key length is discouraged, and you must explicitly allow it here by adding
+    # `min_rsa_signing_key_size: 1024`. If omitted, we enforce the default minimum RSA
+    # key length of 2048 bits.
     mode: maa
     url: $MAA_PROVIDER
+    # We explicitly tolerate:
+    # 1) Enclaves in debug mode; and
+    # 2) Having the TCB state enforced by MAA, not by us, since MAA does not include
+    #    any TCB state in its token. This is required for `mode: maa`.
     tolerate: [debug-mode, maa-managed-tcb]
 
 secrets:
+  # Secrets of `kind: aad-token` represent Azure AD tokens that are retrieved
+  # dynamically. Such secrets can be injected into the enclave's environment or
+  # filesystem, as well as used by this session in flows that require authentication
+  # to Azure services (e.g., retrieving a key from Azure Key Vault).
   - name: AAD_TOKEN
     kind: aad-token
     tenant_id: $AZURE_TENANT_ID
     client_id: $AZURE_CLIENT_ID
-    # NOTE: One could also use `private_key` instead of `application_secret`:
+    # NOTE: One could also use `private_key` instead of `application_secret`, for when
+    # the application credential is a certificate.
     application_secret: $AZURE_CLIENT_SECRET
+
+  # Secrets of `kind: ascii` are plain-text secrets.
   - name: MY_AKV_SECRET
     kind: ascii
+    # Import the content of this secret from an Azure Key Vault. Importing secrets from
+    # AKV requires at least one secret of `kind: aad-token`, so the session can authenticate
+    # to Azure. Since this session has only one secret of `kind: aad-token`, we omit it during
+    # the import. If the session defines more than one secret of `kind: aad-token`, you must
+    # specify the correct one to be used through `import_akv.token`.
     import_akv:
       vault: $AKV_VAULT
       secret_name: $AKV_SECRET_NAME
+
+  # Secrets of `kind: x509` represent X509v3 certificates. Such secrets can be injected
+  # into the enclave's environment or filesystem, and they support bindings to private keys
+  # or certificate chains, if available [1].
+  # [1] https://sconedocs.github.io/CAS_session_lang_0_3/#certificate-values
   - name: MY_AKV_CERT
     kind: x509
     import_akv:
@@ -31,11 +61,17 @@ services:
     command: python3 /app/rest_api.py
     mrenclaves: ["291645fc02749ef4f895da626d1ffe9bf45d34aad2177507844e1b87d220219f"]
     environment:
+      # NOTE: We inject the contents of the secret `MY_AKV_SECRET` (retrieved from AKV)
+      # into the enclave's environment after attestation is successful.
       AKV_SECRET: $$SCONE::MY_AKV_SECRET$$
     pwd: /
 
 images:
   - name: rest-api
+    # NOTE: We inject the contents of the secret `MY_AKV_CERT` (retrieved from AKV)
+    # into the enclave's filesystem after attestation is successful. The extensions
+    # `.crt` (only the certificate) and `.key` (only its private key) after the secret
+    # name specify what must be injected.
     injection_files:
       - path: /tls/flask.crt
         content: $$SCONE::MY_AKV_CERT.crt$$
