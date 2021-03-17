@@ -91,15 +91,17 @@ Create a tunnel to the CAS instance running on the cluster. CAS will be reachabl
 ```bash
 kubectl port-forward svc/cas 8081:8081 >> /tmp/cas-tunnel.log
 export SCONE_CAS_ADDR=127.0.0.1
-export PYTHON_SESSION_NAME=azure-integration-$RANDOM$RANDOM$RANDOM
+export CAS_NAMESPACE=azure-integration-$RANDOM$RANDOM$RANDOM
+export PYTHON_SESSION_NAME=demo
 ```
 
-Start a local SCONE CLI container to submit policies to our CAS. Pass the environments to the local container, so the CLI can use them to populate the session template (`session.template.yaml`):
+Start a local SCONE CLI container to submit policies to our CAS. Pass the environments to the local container, so the CLI can use them to populate the session template (`session.template.yml`):
 
 ```bash
 docker run -it --rm --network host \
    -v $PWD:/templates \
    -e SCONE_CAS_ADDR=$SCONE_CAS_ADDR \
+   -e CAS_NAMESPACE=$CAS_NAMESPACE \
    -e PYTHON_SESSION_NAME=$PYTHON_SESSION_NAME \
    -e AZURE_TENANT_ID=$AZURE_TENANT_ID \
    -e AZURE_CLIENT_ID=$AZURE_CLIENT_ID \
@@ -116,10 +118,16 @@ Inside of the CLI container, run:
 ./attest-cas.sh
 ```
 
+Create a CAS namespace:
+
+```bash
+scone session create --use-env /templates/namespace.template.yml
+```
+
 Submit the templates by running:
 
 ```bash
-scone session create --use-env session.template.yaml
+scone session create --use-env /templates/session.template.yml
 ```
 
 #### Start application
@@ -134,10 +142,11 @@ helm install api-no-attestation deploy/helm/rest-api-sample \
 Now, run the application with attestation. The REST API should start once it gets attested and the appropriate secret and certificates - retrieved from AKV—are transparently and securely injected into the enclave's filesystem and environment.
 
 ```bash
+export SCONE_CONFIG_ID=$CAS_NAMESPACE/$PYTHON_SESSION_NAME/rest-api
 helm install api deploy/helm/rest-api-sample \
    --set useSGXDevPlugin=azure \
    --set scone.cas=$SCONE_CAS_ADDR \
-   --set scone.configId=$PYTHON_SESSION_NAME/rest-api
+   --set scone.configId=$SCONE_CONFIG_ID
 ```
 
 Access the REST API using cURL. Please note that you must use the _Common Name_ as specified in the certificate that you created in AKV.

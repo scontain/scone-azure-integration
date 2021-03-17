@@ -1,4 +1,4 @@
-name: $PYTHON_SESSION_NAME
+name: $CAS_NAMESPACE/$PYTHON_SESSION_NAME
 version: "0.3"
 
 security:
