@@ -73,11 +73,15 @@ Export the appropriate image names and SGX device:
 source environment
 ```
 
-Install SCONE Attestation Services: CAS and LAS. Please note that the services rely on the SGX Device Plugin (`--set useSGXDevPlugin=azure`) and AESM (`--set externalAesmd.enabled=true`) provided by Azure.
+Install SCONE Attestation Services: CAS and LAS. We expose CAS to the internet through an Azure Load Balancer and an external IP address (`--set service.type=LoadBalancer`). If you want to specify a specific static IP address, you have to create it in the appropriate resource group and add `--set service.loadBalancerIP=$STATIC_IP`. Please refer to the Azure documentation to see [how to create static IP addresses to use with AKS](https://docs.microsoft.com/en-us/azure/aks/static-ip).
+
+Please also note that the services rely on the SGX Device Plugin (`--set useSGXDevPlugin=azure`) and AESM (`--set externalAesmd.enabled=true`) provided by Azure.
 
 ```bash
 helm install cas deploy/helm/cas \
+   --set service.type=LoadBalancer \
    --set useSGXDevPlugin=azure
+
 
 helm install las deploy/helm/las \
    --set useSGXDevPlugin=azure \
@@ -86,16 +90,20 @@ helm install las deploy/helm/las \
 
 #### Submit policies
 
-Create a tunnel to the CAS instance running on the cluster. CAS will be reachable through `127.0.0.1` (8081 is the default client port):
+First, retrieve the CAS public IP (please note that it may take a while until the IP is available):
 
 ```bash
-kubectl port-forward svc/cas 8081:8081 >> /tmp/cas-tunnel.log
-export SCONE_CAS_ADDR=127.0.0.1
+export SCONE_CAS_ADDR=$(kubectl get svc cas --template "{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}")
+```
+
+Specify the name of the CAS namespace and of the session we are going to create.
+
+```bash
 export CAS_NAMESPACE=azure-integration-$RANDOM$RANDOM$RANDOM
 export PYTHON_SESSION_NAME=demo
 ```
 
-Start a local SCONE CLI container to submit policies to our CAS. Pass the environments to the local container, so the CLI can use them to populate the session template (`session.template.yml`):
+Start a local SCONE CLI container to submit policies to our CAS. Pass the environment variables to the local container, so the CLI can use them to populate the session template (`session.template.yml`):
 
 ```bash
 docker run -it --rm --network host \
@@ -109,7 +117,8 @@ docker run -it --rm --network host \
    -e AKV_VAULT=$AKV_VAULT \
    -e AKV_SECRET_NAME=$AKV_SECRET_NAME \
    -e AKV_CERT_SECRET_NAME=$AKV_CERT_SECRET_NAME \
-   -e MAA_PROVIDER=$MAA_PROVIDER
+   -e MAA_PROVIDER=$MAA_PROVIDER \
+   $CLI_IMAGE
 ```
 
 Inside of the CLI container, run:
@@ -124,7 +133,7 @@ Create a CAS namespace:
 scone session create --use-env /templates/namespace.template.yml
 ```
 
-Submit the templates by running:
+Submit the templates by running the following command. The option `--use-env` will allow the CLI to use the environment to replace variables inside of the session template.
 
 ```bash
 scone session create --use-env /templates/session.template.yml
@@ -136,14 +145,16 @@ Run the application without attestation: the application will crash because ther
 
 ```bash
 helm install api-no-attestation deploy/helm/rest-api-sample \
+   --set service.type=LoadBalancer \
    --set useSGXDevPlugin=azure
 ```
 
-Now, run the application with attestation. The REST API should start once it gets attested and the appropriate secret and certificates - retrieved from AKV—are transparently and securely injected into the enclave's filesystem and environment.
+Now, run the application with attestation. The REST API should start once it gets attested and the appropriate secret and certificates—retrieved from AKV—are transparently and securely injected into the enclave's filesystem and environment.
 
 ```bash
 export SCONE_CONFIG_ID=$CAS_NAMESPACE/$PYTHON_SESSION_NAME/rest-api
 helm install api deploy/helm/rest-api-sample \
+   --set service.type=LoadBalancer \
    --set useSGXDevPlugin=azure \
    --set scone.cas=$SCONE_CAS_ADDR \
    --set scone.configId=$SCONE_CONFIG_ID
@@ -152,10 +163,10 @@ helm install api deploy/helm/rest-api-sample \
 Access the REST API using cURL. Please note that you must use the _Common Name_ as specified in the certificate that you created in AKV.
 
 ```bash
-export NODE_PORT=$(kubectl get -o jsonpath="{.spec.ports[0].nodePort}" services api-rest-api-sample)
-export NODE_IP=$(kubectl get nodes -o jsonpath="{.items[0].status.addresses[0].address}")
+export API_ADDR=$(kubectl get svc api-rest-api-sample --template "{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}")
+```
 
-curl https://rest-api.scone.sample:$NODE_PORT/secrets --resolve rest-api.scone.sample:$NODE_PORT:$NODE_IP
+curl https://rest-api.scone.sample:4996/secrets --resolve rest-api.scone.sample:4996:$API_ADDR
 ```
 
 > If you created a self-signed certificate in AKV, you need to pass `-k` flag to cURL.
