@@ -38,22 +38,25 @@ secrets:
     kind: ascii
     # Import the content of this secret from an Azure Key Vault. Importing secrets from
     # AKV requires at least one secret of `kind: aad-token`, so the session can authenticate
-    # to Azure. Since this session has only one secret of `kind: aad-token`, we omit it during
-    # the import. If the session defines more than one secret of `kind: aad-token`, you must
-    # specify the correct one to be used through `import_akv.token`.
+    # to Azure. If the session defines only one secret of `kind: aad-token`, it is used by
+    # default to authenticate, and you can omit the field `import_akv.token`.
     import_akv:
       vault: $AKV_VAULT
       secret_name: $AKV_SECRET_NAME
+      token: AAD_TOKEN
 
   # Secrets of `kind: x509` represent X509v3 certificates. Such secrets can be injected
   # into the enclave's environment or filesystem, and they support bindings to private keys
-  # or certificate chains, if available [1].
+  # or certificate chains, if available [1]. If the session defines only one secret of
+  # `kind: aad-token`, it is used by default to authenticate, and you can omit the field
+  # `import_akv.token`.
   # [1] https://sconedocs.github.io/CAS_session_lang_0_3/#certificate-values
   - name: MY_AKV_CERT
     kind: x509
     import_akv:
       vault: $AKV_VAULT
       secret_name: $AKV_CERT_SECRET_NAME
+      token: AAD_TOKEN
 
 services:
   - name: rest-api
