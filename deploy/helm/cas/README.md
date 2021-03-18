@@ -57,6 +57,30 @@ securityContext:
   privileged: true
 ```
 
+### Expose CAS
+
+By default, the CAS instance is only reachable from inside of the cluster (`service.type=ClusterIP`). To expose the CAS instance to outside of the cluster, you can set the parameter `service.type` to either `LoadBalancer` or `NodePort`. If you choose `LoadBalancer` as the type, Kubernetes will expose your service using a managed load balancer and a public IP address (both provisioned by the underlying cloud provider):
+
+```bash
+helm install my-cas sconeappsee/cas --set service.type=LoadBalancer
+```
+
+If your provider allows user-specified IP addresses for the load balancer, you can specify them via `service.loadBalancerIP`. [In Azure, you have to create a static IP before beforehand](https://docs.microsoft.com/en-us/azure/aks/static-ip). If your provider does not support it, the field will be ignored and an ephemeral IP address will be assigned instead. Please also note that the creation of the resource depends on the availability of the IP address you specify.
+
+```bash
+helm install my-cas sconeappsee/cas \
+   --set service.type=LoadBalancer \
+   --set service.loadBalancerIP=$STATIC_IP
+```
+
+If you set `service.type` to `NodePort`, Kubernetes will assign two random ports in the NodePort range that are accessible from outside of the cluster using `$NODEIP:$NODEPORT`. You can specify such ports via `service.nodePorts.enclavePort` and `service.nodePorts.clientPort` (please note that such ports must be available in the nodes, otherwise the resources will not be deployed).
+
+```bash
+helm install my-cas sconeappsee/cas \
+   --set service.type=NodePort \
+   --set service.nodePorts.enclavePort=31000
+```
+
 ### Run in production mode
 
 By default, this chart installs CAS in debug mode, which is more suitable for development environments. To deploy CAS in production mode, set `productionMode.enabled` to `true`. All the differences between the two modes are listed below.
@@ -110,9 +134,12 @@ These parameters are useful for heterogeneous clusters, where only a subset of t
 `productionMode.image`|CAS image for production mode|`registry.scontain.com:5050/sconecuratedimages/services:cas`
 `imagePullSecrets`|CAS pull secrets, in case of private repositories|`[{"name": "sconeapps"}]`
 `securityContext`|Security context for CAS container|`{}`
-`service.type`|CAS service type|`NodePort`
+`service.type`|CAS service type|`ClusterIP`
 `service.clientPort`|CAS client port|`8081`
 `service.enclavePort`|CAS enclave port|`18765`
+`service.loadBalancerIP`|Specify an IP address for your Service, if `service.type=LoadBalancer` and you cloud provider supports it. [Read more](#expose-cas)|`""`
+`service.nodePorts.clientPort`|Specify a nodePort for the CAS client port, if `service.type=NodePort`. [Read more](#expose-cas)|`""`
+`service.nodePorts.enclavePort`|Specify a nodePort for the CAS enclave port, if `service.type=NodePort`. [Read more](#expose-cas)|`""`
 `livenessProbe.enabled`|Whether the CAS health checks are enabled or not|`false`
 `livenessProbe.attestedCLI`|If set to `true`, run liveness probes with an attested SCONE CLI (this also ensures that attestation is working properly)|`true`
 `livenessProbe.periodSeconds`|How often to run the liveness probe, in seconds|`60`

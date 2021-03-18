@@ -21,6 +21,14 @@ service:
   clientPort: 8081
   enclavePort: 18765
 
+  # If `type: LoadBalancer`, the load balancer IP can be specified.
+  loadBalancerIP: ""
+
+  # If `type: NodePort`, the nodePorts can be specified.
+  nodePorts:
+    clientPort: ""
+    enclavePort: ""
+
 env:
   # Use the host IP to reach the appropriate LAS.
   # This requires LAS to be deployed with `service.hostPort=true`.
