@@ -6,10 +6,6 @@ Showcase the integrations to Microsoft Azure built in SCONE platform.
 
 In this sample, a Flask REST API (built with SCONE) running on a Confidential Azure Kubernetes Service cluster is attested by a Microsoft Azure Attestation provider, allowing secrets stored in an Azure Key Vault instance and in the SCONE CAS (Configuration and Attestation Service) to be securely delivered to the attested enclave instance.
 
-### Screencast
-
-> :warning: TODO.
-
 ## Demo
 
 ### Prerequisites
