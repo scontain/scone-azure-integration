@@ -43,7 +43,7 @@ secrets:
     import_akv:
       vault: $AKV_VAULT
       secret_name: $AKV_SECRET_NAME
-      token: AAD_TOKEN
+      token: $$SCONE::AAD_TOKEN$$
 
   # Secrets of `kind: x509` represent X509v3 certificates. Such secrets can be injected
   # into the enclave's environment or filesystem, and they support bindings to private keys
@@ -56,7 +56,7 @@ secrets:
     import_akv:
       vault: $AKV_VAULT
       secret_name: $AKV_CERT_SECRET_NAME
-      token: AAD_TOKEN
+      token: $$SCONE::AAD_TOKEN$$
 
 services:
   - name: rest-api

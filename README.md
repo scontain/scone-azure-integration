@@ -120,7 +120,7 @@ docker run -it --rm --network host \
 Inside of the CLI container, run:
 
 ```bash
-./attest-cas.sh
+./templates/attest-cas.sh
 ```
 
 Create a CAS namespace:
@@ -156,13 +156,16 @@ helm install api deploy/helm/rest-api-sample \
    --set scone.configId=$SCONE_CONFIG_ID
 ```
 
-Access the REST API using cURL. Please note that you must use the _Common Name_ as specified in the certificate that you created in AKV.
+Retrieve the public IP address for our REST API:
 
 ```bash
 export API_ADDR=$(kubectl get svc api-rest-api-sample --template "{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}")
 ```
 
-curl https://rest-api.scone.sample:4996/secrets --resolve rest-api.scone.sample:4996:$API_ADDR
+Access the REST API using cURL. Please note that you must use the _Common Name_ as specified in the certificate that you created in AKV.
+
+```bash
+curl https://rest-api.scone.sample:4996/secret --resolve rest-api.scone.sample:4996:$API_ADDR
 ```
 
 > If you created a self-signed certificate in AKV, you need to pass `-k` flag to cURL.

@@ -76,6 +76,10 @@ spec:
           {{- end}}
           {{- end}}
           volumeMounts:
+          {{- if .Values.externalAesmd.enabled }}
+          - name: var-run-aesmd
+            mountPath: {{ .Values.externalAesmd.path }}
+          {{- end }}
           {{- if .Values.extraVolumeMounts }}
           {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
           {{- end }}

@@ -1,3 +1,4 @@
+#!/bin/bash
 if [ -z "$SCONE_CAS_ADDR" ]; then
    echo "ERROR - Please specify \$SCONE_CAS_ADDR."
    exit 1
