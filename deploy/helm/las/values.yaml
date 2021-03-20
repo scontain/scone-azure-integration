@@ -25,7 +25,8 @@ securityContext: {}
 
 resources: {}
 
-nodeSelector: {}
+nodeSelector:
+  beta.kubernetes.io/instance-type: Standard_DC2s_v2
 
 tolerations: []
 
@@ -41,4 +42,4 @@ extraVolumeMounts: []
 useSGXDevPlugin: "scone"
 # Amount of EPC memory to request to Azure, in MiB.
 # Used only when `useSGXDevPlugin=azure`.
-sgxEpcMem: "4"
+sgxEpcMem: "16"

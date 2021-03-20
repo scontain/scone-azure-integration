@@ -36,7 +36,7 @@ Please refer to the official Azure documentation to see [how to create an Azure 
 Export the name of such secrets to the environment, as well as the AKV URL, _e.g._:
 
 ```bash
-export AKV_VAULT="https://sconesample.cus.attest.azure.net"
+export AKV_VAULT="https://scone-sample.vault.azure.net/"
 export AKV_SECRET_NAME="sample-secret"
 export AKV_CERT_SECRET_NAME="flask"
 ```
@@ -80,8 +80,7 @@ helm install cas deploy/helm/cas \
 
 
 helm install las deploy/helm/las \
-   --set useSGXDevPlugin=azure \
-   --set externalAesmd.enabled=true
+   --set useSGXDevPlugin=azure
 ```
 
 #### Submit policies
@@ -102,7 +101,7 @@ export PYTHON_SESSION_NAME=demo
 Start a local SCONE CLI container to submit policies to our CAS. Pass the environment variables to the local container, so the CLI can use them to populate the session template (`session.template.yml`):
 
 ```bash
-docker run -it --rm --network host \
+docker run -d --rm --network host \
    -v $PWD:/templates \
    -e SCONE_CAS_ADDR=$SCONE_CAS_ADDR \
    -e CAS_NAMESPACE=$CAS_NAMESPACE \
@@ -114,7 +113,11 @@ docker run -it --rm --network host \
    -e AKV_SECRET_NAME=$AKV_SECRET_NAME \
    -e AKV_CERT_SECRET_NAME=$AKV_CERT_SECRET_NAME \
    -e MAA_PROVIDER=$MAA_PROVIDER \
-   $CLI_IMAGE
+   --name scone-cli \
+   --entrypoint sh \
+   $CLI_IMAGE \
+   -c "sleep 7200"
+docker exec -it scone-cli bash
 ```
 
 Inside of the CLI container, run:
