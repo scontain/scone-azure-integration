@@ -8,6 +8,10 @@ In this sample, a Flask REST API (built with SCONE) running on a Confidential Az
 
 ## Demo
 
+### Screencast
+
+[![SCONE Platform: Azure integrations](http://img.youtube.com/vi/S8nnXNWV9zw/0.jpg)](http://www.youtube.com/watch?v=S8nnXNWV9zw)
+
 ### Prerequisites
 
 To run this tutorial, you need an Azure subscription and the following resources:
@@ -179,8 +183,20 @@ The expected output looks like:
 {"access_timestamp":1615855461.7656054,"secret":"a13f688c788626380ae1209e31e664891fc19dcdd0cfa29c27ca7e6e16b83a95"}
 ```
 
+### Clean up
+
+Remove resources deployed to the Kubernetes cluster, as well the SCONE CLI container. Finally, unset the Azure credentials from the environment:
+
+```bash
+helm delete cas las api-no-attestation api
+docker stop scone-cli
+unset AZURE_TENANT_ID AZURE_CLIENT_ID AZURE_CLIENT_SECRET
+```
+
+Use the Azure Portal or the Azure CLI to clean up the resources created on Azure, such the as AKS cluster or the Azure Key Vault. Please refer to the official Azure documentation to see [how to open and delete resources](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resources-portal#delete-resources).
+
 ### Limitations
 
-- Some MAA instances run inside of enclaves. We currently do not support attestation the MAA instance itself.
+- Some MAA instances run inside of enclaves. We currently do not support attestation of the MAA instance itself.
 
-- AAD tokens have a maximum expiration time of 24 hours. We currently do not support the renewal of AAD tokens at runtime. They are renewed upon every enclave startup only.
+- Currently, secrets are injected only during the startup of the enclave. Since the tokens will expire eventually (AAD tokens have a maximum duration of 24 hours), the enclave has to restart and reattest itself in order to get a new token.
